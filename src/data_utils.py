@@ -1,3 +1,4 @@
+import numpy as np
 import json
 import numpy
 import pandas
@@ -8,6 +9,8 @@ from py_vollib.black.implied_volatility import implied_volatility as biv
 import pytz
 from dateutil.parser import parse
 import datetime
+from scipy.spatial import ConvexHull
+
 
 def get_test_data(data_root):
     data_frames = []
@@ -32,6 +35,16 @@ def get_test_data(data_root):
     df["iv"] = df.apply(lambda row: biv(row.mid, row.F_market, row.K, row.r, row.t,row.flag), axis=1)
     return df
 
+
+def generate_slices_from_df(df):
+    unique_t =sorted(df.t.unique())
+    for t in unique_t:
+        test = df[df.t == t]
+        test = remove_outlier_from_slice(test)
+        if len(test)>10:
+            yield test
+
+
 def generate_slices(data_root):
     df = get_test_data(data_root)
     unique_t =sorted(df.t.unique())
@@ -39,6 +52,7 @@ def generate_slices(data_root):
         test = df[df.t == t]
         if len(test)>10:
             yield test
+
 
 def maturity_timestamp_from_string(s):
     d = parse(s).date()
@@ -78,6 +92,54 @@ def futures_curve(data_root):
     interpf = interp1d(t,F,kind="quadratic")
     return interpf
 
+
+def remove_outlier_from_slice(slice):
+    x, y1 = slice.k, slice.iv
+    viewer_position = [(0, -1)]
+    outlier_idx1, _ = detect_outliers(x, y1, viewer_position)
+    idx = [x for x in range(len(slice)) if x not in outlier_idx1]
+    return slice.iloc[idx]
+
+
+def visible_points(hull):
+    xypairs = set()
+    for visible_facet in hull.simplices[hull.good]:
+        facet = hull.points[visible_facet]
+        for x,y in facet:
+            xypairs.add((x,y))
+    xypairs = sorted(list(xypairs), key=lambda t:t[0])
+    return np.array(list(xypairs))
+
+
+def symmetrical_difference_2d_arrays(a,b, ignore):
+
+    A = arr2d_to_set_of_tuples(a)
+    B = arr2d_to_set_of_tuples(b)
+    SD = A.symmetric_difference(B)
+    tuple_to_ignore = ignore[0]
+    if tuple_to_ignore in SD:
+        SD.remove(tuple_to_ignore)
+    if len(SD)==0:
+        return np.array([])
+    return np.array(list(SD))
+
+
+def arr2d_to_set_of_tuples(arr):
+    return set([tuple(pt) for pt in arr])
+
+
+def detect_outliers(x, y, viewer_position):
+    pts_in = np.vstack((x, y)).T
+    pts_in= np.concatenate((pts_in, np.array(viewer_position)))
+    n = len(pts_in)
+    hull = ConvexHull(points=pts_in,
+                          qhull_options=f'QG{n-1}')
+    visible = visible_points(hull)
+    SD = symmetrical_difference_2d_arrays(pts_in, visible, ignore=viewer_position)
+    outlier_idx = np.array(list(sorted([np.where(p==pts_in)[0][0] for p in SD])), dtype=int)
+    return outlier_idx, visible
+
+
 if __name__ == '__main__':
     get_test_data(data_root=Path("data"))
     exit()
@@ -94,7 +156,3 @@ if __name__ == '__main__':
 
 
     # print(get_snapshot_datetime())
-
-
-
-
