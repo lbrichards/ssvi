@@ -12,9 +12,9 @@ import datetime
 from scipy.spatial import ConvexHull
 
 
-def get_test_data(data_root):
+def get_test_data(data_root, currency='btc'):
     data_frames = []
-    fnames = data_root.glob("*.csv")
+    fnames = data_root.glob(f"{currency}*.csv")
     for f in fnames:
         data_frames.append(pandas.read_csv(f))
     df = pandas.concat(data_frames)
@@ -23,7 +23,7 @@ def get_test_data(data_root):
     df["maturity_ts"] = df.maturity.apply(maturity_timestamp_from_string)
     df["snapshot_ts"]= datetime.datetime.fromtimestamp(df.ts.values[0], tz=pytz.UTC)
     df["t"] = df.apply(lambda row: calc_t(row.snapshot_ts, row.maturity_ts), axis=1)
-    Ffunc = futures_curve(data_root)
+    Ffunc = futures_curve(data_root, currency)
     df["F_market"] = df.t.apply(Ffunc)
     df["r"] = numpy.log(df.F_market/df.S)/df.t
     df["k"] = numpy.log(df.K/df.F_market)
@@ -32,15 +32,23 @@ def get_test_data(data_root):
     df["flag"] = df.k.apply(lambda val: "p" if val<0 else "c")
     df.mid*=df.S
     df = df[~numpy.isnan(df.mid)]
-    df["iv"] = df.apply(lambda row: biv(row.mid, row.F_market, row.K, row.r, row.t,row.flag), axis=1)
+    df["iv"] = df.apply(lambda row: biv1(row), axis=1)
     return df
 
 
-def generate_slices_from_df(df):
+def biv1(row):
+    try:
+        return biv(row.mid, row.F_market, row.K, row.r, row.t, row.flag)
+    except:
+        return None
+
+
+def generate_slices_from_df(df, outlier):
     unique_t =sorted(df.t.unique())
     for t in unique_t:
         test = df[df.t == t]
-        test = remove_outlier_from_slice(test)
+        if outlier:
+            test = remove_outlier_from_slice(test)
         if len(test)>10:
             yield test
 
@@ -77,8 +85,8 @@ def calc_t(snapshot_timestamp, maturity_timestamp):
     return td.days / 365 + td.seconds / (3600 * 24 * 365)
 
 
-def futures_curve(data_root):
-    jsonfile = list(data_root.glob("*.json"))[0]
+def futures_curve(data_root, currency):
+    jsonfile = list(data_root.glob(f"{currency}*.json"))[0]
     with open(jsonfile, "r") as f:
         data = json.load(f)
     data = {date_from_futures_code(k):v for k, v in data.items()}
