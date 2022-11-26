@@ -12,20 +12,20 @@ def error_count(slice, svi_param):
     x = slice.k.values
     iva, ivb = iv_bid_ask_for_slice(slice, t)
     w = svi(x, *svi_param)
-    iv = numpy.sqrt(w/t)
+    iv = numpy.sqrt(w / t)
     plt.plot(x, w, 'b')
     for k, i1, i2 in zip(x, ivb, iva):
-        plt.plot([k, k], [i1**2*t, i2**2*t], 'y.-', lw=2)
+        plt.plot([k, k], [i1 ** 2 * t, i2 ** 2 * t], 'y.-', lw=2)
 
-    width = x.max()-x.min()
+    width = x.max() - x.min()
     x_mid = x[argmin(ivb)]
-    dist = numpy.abs(x_mid-x)
+    dist = numpy.abs(x_mid - x)
     aa = numpy.where(dist < width / 3)
     iva = numpy.array(iva)[aa]
     ivb = numpy.array(ivb)[aa]
     iv = numpy.array(iv)[aa]
 
-    return [1 for i,a,b in zip(iv, iva, ivb) if i>a or i<b]
+    return [1 for i, a, b in zip(iv, iva, ivb) if i > a or i < b]
 
 
 if __name__ == '__main__':
@@ -39,16 +39,13 @@ if __name__ == '__main__':
     tt = []
     for slice in list(generate_slices_from_df(df, outlier=True)):
         t = float(slice.t.unique()[0])
-        if t<5./365:
+        if t < 5. / 365:
             continue
         raw_params[slice.t.unique()[0]] = list(calibrate_svi(slice))
         plt.title(f't: {t}\n'
                   'inlier accuracy: '
-                  f'{100-100*numpy.count_nonzero(error_count(slice, raw_params[t]))/len(slice):0.2f}%'
+                  f'{100 - 100 * numpy.count_nonzero(error_count(slice, raw_params[t])) / len(slice):0.2f}%'
                   )
         plt.show()
 
     # json.dump(json.dumps(raw_params), open('svi.json', 'w'))
-
-
-
