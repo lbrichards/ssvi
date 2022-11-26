@@ -42,10 +42,22 @@ def calibrate_svi(slice, i=None, ps=True):
         y = svi(xtest, a, b, rho, m, sigma)
         return numpy.gradient(numpy.gradient(y, edge_order=2), edge_order=2).sum()
 
+    def constraint5(params):
+        # positive second derivative
+        a, b, rho, m, sigma = params
+        return -sigma*rho/numpy.sqrt(1-rho**2)-m
+    def constraint6(params):
+        # positive second derivative
+        a, b, rho, m, sigma = params
+        return b*sigma*numpy.sqrt(1-rho**2)-a
+
+
     con1 = {'type': 'ineq', 'fun': constraint1}
     con2 = {'type': 'ineq', 'fun': constraint2}
     con3 = {'type': 'ineq', 'fun': constraint3}
     con4 = {'type': 'ineq', 'fun': constraint4}
+    con5 = {'type': 'ineq', 'fun': constraint5}
+    con6 = {'type': 'ineq', 'fun': constraint6}
 
     def objective(params):
         a, b, m, rho, sigma = params
@@ -58,7 +70,7 @@ def calibrate_svi(slice, i=None, ps=True):
     sol = opt.minimize(
         fun=objective,
         bounds=bnd,
-        constraints=[con1, con2, con4],
+        constraints=[con1, con2, con4, con5, con6],
         # constraints=[con1, con2, con3, con4],
         x0=numpy.array([0.5 * y.min(), .1, -.5, 0.1, 1]),
         # method="SLSQP",

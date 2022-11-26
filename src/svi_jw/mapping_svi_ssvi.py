@@ -17,7 +17,7 @@ def svi_to_essvi(svi_param):
     return theta, fi, rho
 
 
-def essvi_to_svi(essvi_param):
+def essvi_to_svi(theta, essvi_param):
     fi = phi(theta, essvi_param)
     rho = _rho(theta, essvi_param)
     a = theta * (1 - rho ** 2) / 2
