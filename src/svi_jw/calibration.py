@@ -3,9 +3,12 @@ import scipy.optimize as opt
 
 from src.svi_jw.svi_func import svi, g
 from src.svi_jw.translate_params import jw_params_from_raw_params
+from matplotlib import pyplot as plt
+
+from src.svi_jw.weights import make_weights
 
 
-def calibrate_svi(slice):
+def calibrate_svi(slice, i=None, ps=True):
     t = slice.t.unique()[0]
     x, y = slice.k.values, slice.iv.values**2*t
 
@@ -19,14 +22,14 @@ def calibrate_svi(slice):
 
     def constraint1(params):
         a, b, m, rho, sigma = params
-        return a + b * sigma * sqrt(1 - rho ** 2)
+        return a + b * sigma * numpy.sqrt(1 - rho ** 2)
 
     def constraint2(params):
         return g(x, params)
 
     def constraint3(params):
         a, b, rho, m, sigma = params
-        idx_mid = where(y == y.min())
+        idx_mid = numpy.where(y == y.min())
         x_at_ymin = x[idx_mid].mean()
         y_model = svi(x, a, b, rho, m, sigma)
         p10 = numpy.percentile(y_model, 0.1)
@@ -35,9 +38,9 @@ def calibrate_svi(slice):
     def constraint4(params):
         # positive second derivative
         a, b, rho, m, sigma = params
-        xtest = linspace(-2, 2)
+        xtest = numpy.linspace(-2, 2)
         y = svi(xtest, a, b, rho, m, sigma)
-        return numpy.diff(numpy.diff(y)).sum()
+        return numpy.gradient(numpy.gradient(y, edge_order=2), edge_order=2).sum()
 
     con1 = {'type': 'ineq', 'fun': constraint1}
     con2 = {'type': 'ineq', 'fun': constraint2}
@@ -47,19 +50,23 @@ def calibrate_svi(slice):
     def objective(params):
         a, b, m, rho, sigma = params
         guess = svi(x, a, b, m, rho, sigma)
-        return square(guess - y).sum()
+        if (guess<0).any():
+            return 1
+        w, mu = make_weights(x, y)
+        return (numpy.square(guess - y)*w).sum()
 
     sol = opt.minimize(
         fun=objective,
         bounds=bnd,
-        constraints=[con1, con2, con3, con4],
+        constraints=[con1, con2, con4],
+        # constraints=[con1, con2, con3, con4],
         x0=numpy.array([0.5 * y.min(), .1, -.5, 0.1, 1]),
         # method="SLSQP",
         method="trust-constr",
         tol=1e-8
     )
 
-    print(sol)
+    # print(sol)
     jw_params = jw_params_from_raw_params(t, *sol.x)
     xx = numpy.linspace(-1.5,1.5)
     y_out = svi(xx, *sol.x)
@@ -69,7 +76,6 @@ def calibrate_svi(slice):
     plt.title(slice.t.unique()[0])
     plt.legend()
     plt.grid(True)
-    plt.show()
     return sol.x
 
 
@@ -84,6 +90,7 @@ if __name__ == '__main__':
     tt = []
     for slice in generate_slices_from_df(df, outlier=False):
         raw_params[slice.t.unique()[0]]=list(calibrate_svi(slice))
+        plt.show()
 
     # json.dump(json.dumps(raw_params), open('svi.json', 'w'))
 

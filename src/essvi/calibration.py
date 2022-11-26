@@ -13,6 +13,19 @@ from src.data_utils import get_test_data, generate_slices_from_df
 from src.essvi.essvi_func import surface_essvi, get_theta_at_k0_for_slice, ESSVI
 
 
+def iv_bid_ask_for_slice(slice, t):
+    iva = []
+    ivb = []
+    for i, row in slice.iterrows():
+        if row.k < 0:
+            ivb.append(biv(row.pbid * row.S, row.F_market, row.K, row.r, t, row.flag))
+            iva.append(biv(row.pask * row.S, row.F_market, row.K, row.r, t, row.flag))
+        else:
+            ivb.append(biv(row.cbid * row.S, row.F_market, row.K, row.r, t, row.flag))
+            iva.append(biv(row.cask * row.S, row.F_market, row.K, row.r, t, row.flag))
+
+    return iva, ivb
+
 def calibrate_essvi(df, rho_func=None, outlier=True, Plot=False):
     y = []
     thetas = {0: 0}
@@ -66,7 +79,7 @@ def calibrate_essvi(df, rho_func=None, outlier=True, Plot=False):
             plt.title(f't = {t}')
             plt.show()
 
-    plot_surface(sol, thetas)
+    # plot_surface(sol, thetas)
     return sol.x
 
 
