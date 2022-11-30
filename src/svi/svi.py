@@ -1,8 +1,11 @@
+import json
+
 import numpy
+from pylab import *
 import scipy.optimize as opt
 
 from src.essvi.calibration import iv_bid_ask_for_slice
-from src.svi_jw.calibration import calibrate_svi
+from src.svi.calibration import calibrate_svi
 from src.svi_jw.svi_func import svi, g
 from src.svi_jw.translate_params import jw_params_from_raw_params
 
@@ -30,7 +33,6 @@ def error_count(slice, svi_param):
 
 if __name__ == '__main__':
     from pathlib import Path
-    from pylab import *
     from src.data_utils import get_test_data, generate_slices_from_df
 
     thetas = {}
@@ -41,11 +43,14 @@ if __name__ == '__main__':
         t = float(slice.t.unique()[0])
         if t < 5. / 365:
             continue
-        raw_params[slice.t.unique()[0]] = list(calibrate_svi(slice))
+        raw_params[slice.t.unique()[0]] = svi_param = list(calibrate_svi(slice))
+        a, b, m, rho, sigma = svi_param
+        print(m,  -sigma*rho/sqrt(1-rho**2))
+        print(a,  b*sigma*sqrt(1-rho**2))
         plt.title(f't: {t}\n'
                   'inlier accuracy: '
                   f'{100 - 100 * numpy.count_nonzero(error_count(slice, raw_params[t])) / len(slice):0.2f}%'
                   )
         plt.show()
 
-    # json.dump(json.dumps(raw_params), open('svi.json', 'w'))
+    json.dump(json.dumps(raw_params), open('svi.json', 'w'))

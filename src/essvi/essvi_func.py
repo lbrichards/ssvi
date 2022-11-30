@@ -6,12 +6,18 @@ from src.data_utils import get_test_data, generate_slices_from_df
 
 
 def phi(theta, params):
-    Lambda, eta, a, b, c = params
+    if len(params) == 2:
+        Lambda, eta = params
+    else:
+        Lambda, eta, a, b, c = params
     return eta / (pow(theta, Lambda)*pow(1+theta, 1-Lambda))
 
-
 def _rho(theta, params):
-    Lammda, eta, a, b, c = params
+    if len(params) == 3:
+        a, b, c = params
+    else:
+        Lammda, eta, a, b, c = params
+
     return a * np.exp(-b * theta) + c
 
 

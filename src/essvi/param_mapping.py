@@ -30,7 +30,7 @@ omega0 = total_implied_variance(
 )
 
 plt.plot(k, omega0)
-# plt.show()
+plt.show()
 
 
 def f(ssvi_param):
@@ -41,7 +41,7 @@ def f(ssvi_param):
     sigma = numpy.sqrt(1 - rho ** 2) / fi
     return a, b, m, rho, sigma
 
-SSVI(k, t, X_ssvi) # gamma, eta, sigma, rho
+# SSVI(k, t, X_ssvi) # gamma, eta, sigma, rho
 
 
 

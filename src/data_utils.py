@@ -49,7 +49,6 @@ def generate_slices_from_df(df, outlier):
         test = df[df.t == t]
         if outlier:
             test = remove_outlier_from_slice(test)
-        print(len(test))
         if len(test)>6:
             yield test
 

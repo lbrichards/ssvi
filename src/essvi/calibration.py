@@ -47,7 +47,7 @@ def calibrate_essvi(df, rho_func=None, outlier=True, Plot=False):
         tol=1e-8
     )
 
-    print(sol)
+    # print(sol)
     # return sol.x
     for slice in generate_slices_from_df(df, outlier):
         theta = get_theta_at_k0_for_slice(slice)
@@ -79,18 +79,19 @@ def calibrate_essvi(df, rho_func=None, outlier=True, Plot=False):
             plt.title(f't = {t}')
             plt.show()
 
-    # plot_surface(sol, thetas)
+    # plot_surface(sol.x, thetas)
     return sol.x
 
 
-def plot_surface(sol, thetas):
+def plot_surface(params, thetas):
+    tf = [float(i) for i in thetas.keys()]
     xx, TT = np.linspace(-3., 3., 20), np.linspace(.01, 1, 20)
-    f = interp1d(list(thetas.keys()), list(thetas.values()), kind='quadratic', fill_value="extrapolate")
+    f = interp1d(tf, list(thetas.values()), kind='quadratic', fill_value="extrapolate")
     g = lambda t: max(f(t), .1)
     wss = []
     for t in TT:
         theta = g(t)
-        ws = ESSVI(xx, theta, sol.x)
+        ws = ESSVI(xx, theta, params)
         wss.append(ws)
     fig = plt.figure(figsize=(8, 5))
     ax = fig.add_subplot(projection='3d')
