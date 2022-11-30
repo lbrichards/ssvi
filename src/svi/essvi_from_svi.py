@@ -138,10 +138,10 @@ if __name__ == '__main__':
 
     Lambda, eta = calibrate_phi_func_parameters(thetas, phis)
     a, b, c = calibrate_rho_func_parameters(thetas, rhos)
-    _Plot = True
+    _Plot = False
     if _Plot:
         Plot()
 
     essvi_params = Lambda, eta, a, b, c
     plot_surface(essvi_params, thetas)
-    # plot_slices(thetas, svi_params, essvi_params)
+    plot_slices(thetas, svi_params, essvi_params)
