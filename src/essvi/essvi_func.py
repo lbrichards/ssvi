@@ -3,7 +3,13 @@ import json
 import numpy
 from pylab import *
 from src.data_utils import get_test_data, generate_slices_from_df
+'''
+phi function
 
+Arbitrage-free SVI volatility surfaces
+Jim Gatheral, Antoine Jacquiery
+March 22, 2013
+'''
 
 def phi(theta, params):
     if len(params) == 2:
@@ -58,8 +64,17 @@ def ESSVI(x, theta, params):
     return 0.5 * theta * (1. + rho * p * x + np.sqrt((p * x + rho) * (p * x + rho) + 1. - rho * rho))
 
 
-def ESSVI_p_rho(x, theta, p, rho):
+def ESSVI_theta_p_rho(x, theta, p, rho):
     return 0.5 * theta * (1. + rho * p * x + np.sqrt((p * x + rho) * (p * x + rho) + 1. - rho * rho))
+
+
+def ESSVI_theta_si_rho(x, theta, si, rho):
+    return 0.5 * (theta + rho * si * x +
+                  np.sqrt(
+                      np.square(si * x + theta*rho) +
+                      theta**2 * (1. - rho **2)
+                    )
+                  )
 
 
 def ESSVI1(x, theta, params):

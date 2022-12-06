@@ -93,6 +93,10 @@ def plot_surface(params, thetas):
         theta = g(t)
         ws = ESSVI(xx, theta, params)
         wss.append(ws)
+    plot3d(TT, wss, xx)
+
+
+def plot3d(xx, TT, wss):
     fig = plt.figure(figsize=(8, 5))
     ax = fig.add_subplot(projection='3d')
     xxx, TTT = np.meshgrid(xx, TT)

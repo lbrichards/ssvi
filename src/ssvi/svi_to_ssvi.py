@@ -4,7 +4,7 @@ import json
 import numpy
 import scipy.optimize as opt
 from pylab import *
-from src.essvi.essvi_func import ESSVI, ESSVI_p_rho, phi, _rho
+from src.essvi.essvi_func import ESSVI, ESSVI_theta_p_rho, phi, _rho
 from src.svi_jw.svi_func import svi
 
 
@@ -17,7 +17,7 @@ def svi2ssvi(svi_param, theta):
         [0.001, 10]]
 
     def objective(params):
-        guess = ESSVI_p_rho(x, *params)
+        guess = ESSVI_theta_p_rho(x, *params)
         return np.abs(guess - y).sum()
 
     def constraint1(params):
@@ -53,7 +53,7 @@ def svi2ssvi(svi_param, theta):
     )
 
     print(sol)
-    y1 = ESSVI_p_rho(x, *sol.x)
+    y1 = ESSVI_theta_p_rho(x, *sol.x)
     plt.plot(x,y, label='svi')
     plt.plot(x,y1, label='ssvi')
     return sol.x

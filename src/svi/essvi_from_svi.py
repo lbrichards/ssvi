@@ -10,7 +10,7 @@ import scipy.optimize as opt
 from path import Path
 
 from src.essvi.calibration import plot_surface, iv_bid_ask_for_slice
-from src.essvi.essvi_func import phi, _rho, get_theta_at_k0_for_slice, ESSVI, ESSVI_p_rho
+from src.essvi.essvi_func import phi, _rho, get_theta_at_k0_for_slice, ESSVI, ESSVI_theta_p_rho
 from src.svi.ssvi_from_svi import error_count_essvi
 from src.svi.svi import error_count
 from src.svi_jw.svi_func import svi
@@ -104,7 +104,7 @@ def plot_slices(thetas, svi_params, essvi_params, calibrated = False):
             w2 = ESSVI(xx, theta, essvi_params)
         else:
             essvi_params = (theta, phis[str(t)], rhos[str(t)])
-            w2 = ESSVI_p_rho(xx, *essvi_params)
+            w2 = ESSVI_theta_p_rho(xx, *essvi_params)
         w3 = svi(xx, *params)
 
         plt.figure(figsize=[10, 8])

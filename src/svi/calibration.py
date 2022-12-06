@@ -1,6 +1,7 @@
 import json
 
 import numpy
+import pandas
 import scipy.optimize as opt
 
 from src.svi_jw.svi_func import svi, g
@@ -101,14 +102,19 @@ if __name__ == '__main__':
     from src.data_utils import get_test_data, generate_slices_from_df
 
     thetas = {}
-    df = get_test_data(data_root=Path("../data"))
+    # df = get_test_data(data_root=Path("../data"))
+    df = pandas.read_csv(Path("../data")/'all_data.csv')
     raw_params = {}
     tt = []
+    prev = 0
     for slice in generate_slices_from_df(df, outlier=True):
-        raw_params[slice.t.unique()[0]]=list(calibrate_svi(slice))
-        plt.show()
+        if slice.t.unique()[0] > prev+.0001:
+            raw_params[slice.t.unique()[0]]=list(calibrate_svi(slice))
+            prev = slice.t.unique()[0]
+            print(prev)
+    plt.show()
 
-    # json.dump(json.dumps(raw_params), open('svi.json', 'w'))
+    json.dump(json.dumps(raw_params), open('svi1.json', 'w'))
 
 
 

@@ -7,7 +7,7 @@ from src.data_utils import get_test_data, generate_slices_from_df
 from src.essvi.calibration import get_theta_at_k0_for_slice, ESSVI, calibrate_essvi, iv_bid_ask_for_slice
 from path import Path
 
-from src.essvi.essvi_func import ESSVI_p_rho
+from src.essvi.essvi_func import ESSVI_theta_p_rho
 from src.svi_jw.calibration import svi
 from src.svi_jw.compare_svi_and_essvi import plot_compare
 from src.svi_jw.mapping_svi_ssvi import svi_to_essvi

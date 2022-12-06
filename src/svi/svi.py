@@ -45,8 +45,8 @@ if __name__ == '__main__':
             continue
         raw_params[slice.t.unique()[0]] = svi_param = list(calibrate_svi(slice))
         a, b, m, rho, sigma = svi_param
-        print(m,  -sigma*rho/sqrt(1-rho**2))
-        print(a,  b*sigma*sqrt(1-rho**2))
+        # print(m,  -sigma*rho/sqrt(1-rho**2))
+        # print(a,  b*sigma*sqrt(1-rho**2))
         plt.title(f't: {t}\n'
                   'inlier accuracy: '
                   f'{100 - 100 * numpy.count_nonzero(error_count(slice, raw_params[t])) / len(slice):0.2f}%'

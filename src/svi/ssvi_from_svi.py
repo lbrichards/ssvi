@@ -7,7 +7,7 @@ from src.data_utils import get_test_data, generate_slices_from_df
 from src.essvi.calibration import get_theta_at_k0_for_slice, ESSVI, calibrate_essvi, iv_bid_ask_for_slice
 from path import Path
 
-from src.essvi.essvi_func import ESSVI_p_rho
+from src.essvi.essvi_func import ESSVI_theta_p_rho
 from src.svi.svi import error_count
 from src.svi_jw.calibration import svi
 from src.svi_jw.compare_svi_and_essvi import plot_compare
@@ -19,7 +19,7 @@ def error_count_essvi(slice, theta, essvi_param):
     x = slice.k.values
     iva, ivb = iv_bid_ask_for_slice(slice, t)
     if len(essvi_param) == 3:
-        w = ESSVI_p_rho(x, *essvi_param)
+        w = ESSVI_theta_p_rho(x, *essvi_param)
     else:
         w = ESSVI(x, theta, essvi_param)
     iv = numpy.sqrt(w / t)
@@ -72,7 +72,7 @@ def Plots(df, df_origin, svi_param, essvi_param):
         params = svi_param[str(t)]
         essvi_param = svi_to_essvi(params)
         # w2 = ESSVI(xx, theta, essvi_param)
-        w2 = ESSVI_p_rho(xx, *essvi_param)
+        w2 = ESSVI_theta_p_rho(xx, *essvi_param)
         w3 = svi(xx, *params)
 
         plt.figure(figsize=[10, 8])

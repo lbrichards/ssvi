@@ -14,17 +14,23 @@ from scipy.spatial import ConvexHull
 
 def get_test_data(data_root, currency='btc'):
     data_frames = []
-    fnames = data_root.glob(f"{currency}*.csv")
+    fnames = data_root.rglob(f"{currency}*.csv")
     for f in fnames:
-        data_frames.append(pandas.read_csv(f))
+        dd = pandas.read_csv(f)
+        d = str(f).split('_')[1]
+        t = str(f).split('_')[2].split('.')[0]
+        dd['timestamp'] = parse(d+'-'+t)
+        data_frames.append(dd)
+
     df = pandas.concat(data_frames)
     df.index = range(len(df))
     del df["Unnamed: 0"]
     df["maturity_ts"] = df.maturity.apply(maturity_timestamp_from_string)
-    df["snapshot_ts"]= datetime.datetime.fromtimestamp(df.ts.values[0], tz=pytz.UTC)
+    df["snapshot_ts"]= [pandas.Timestamp(x, tz=pytz.UTC) for x in df.timestamp.values]
     df["t"] = df.apply(lambda row: calc_t(row.snapshot_ts, row.maturity_ts), axis=1)
-    Ffunc = futures_curve(data_root, currency)
-    df["F_market"] = df.t.apply(Ffunc)
+    # Ffunc = futures_curve(data_root, currency)
+    # df["F_market"] = df.t.apply(Ffunc)
+    df = df[~numpy.isnan(df.F_market)]
     df["r"] = numpy.log(df.F_market/df.S)/df.t
     df["k"] = numpy.log(df.K/df.F_market)
     df["mid"] = df.apply(lambda row: (row.cbid+row.cask)/2 if row.k>0 else \
@@ -46,14 +52,9 @@ def biv1(row):
 def generate_slices_from_df(df, outlier):
     unique_t =sorted(df.t.unique())
     for t in unique_t:
-        if t<.015:
-            continue
         test = df[df.t == t]
         if outlier:
-            try:
-                test = remove_outlier_from_slice(test)
-            except:
-                ...
+            test = remove_outlier_from_slice(test)
         if len(test)>6:
             yield test
 
@@ -154,13 +155,14 @@ def detect_outliers(x, y, viewer_position):
 
 
 if __name__ == '__main__':
-    get_test_data(data_root=Path("data"))
+    data_path = 'C:\\project\\kaiko-datafeed\\data'
+    df = get_test_data(data_root=Path(data_path) / "drbt")
+    df.to_csv('data/all_data.csv')
     exit()
     from matplotlib import pyplot as plt
     import matplotlib
     matplotlib.use("TkAgg")
-
-    interpf  = futures_curve(data_root=Path("data"))
+    interpf  = futures_curve(data_root= Path(data_path) / "drbt")
     t = numpy.linspace(0,interpf.x.max())
     y = interpf(t)
     plt.plot(t, y)

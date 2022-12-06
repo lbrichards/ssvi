@@ -2,8 +2,9 @@ import json
 
 import matplotlib.pyplot as plt
 import numpy
+from scipy.interpolate import interp1d
 
-from src.essvi.essvi_func import phi, _rho, ESSVI, ESSVI_p_rho
+from src.essvi.essvi_func import phi, _rho, ESSVI, ESSVI_theta_p_rho
 from src.svi_jw.svi_func import svi
 
 
@@ -11,8 +12,8 @@ def svi_to_essvi(svi_param):
     a, b, m, rho, sigma = svi_param
     fi = numpy.sqrt(1-rho**2)/sigma
     theta = 2*b*sigma/numpy.sqrt(1-rho**2)
-    print(a, theta*(1-rho**2)/2)
-    print(m, rho/fi)
+    # print(a, theta*(1-rho**2)/2)
+    # print(m, rho/fi)
 
     return theta, fi, rho
 
@@ -41,7 +42,7 @@ def plot_essvi_to_svi(essvi_param, svi_params, theta):
 
 def plot_svi_to_essvi(essvi_param, svi_params):
     xx = numpy.linspace(-1.5, 1.5)
-    w_essvi = ESSVI_p_rho(xx, *essvi_param)
+    w_essvi = ESSVI_theta_p_rho(xx, *essvi_param)
     w_svi = svi(xx, *svi_params)
     plt.plot(xx, w_essvi, 'r', lw=5, alpha=.6, label='essvi')
     plt.plot(xx, w_svi, 'g--', lw=5, alpha=.6, label='svi')
